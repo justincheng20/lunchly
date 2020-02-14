@@ -40,7 +40,7 @@ class Customer {
        WHERE concat (first_name, ' ' ,last_name) ILIKE $1
        ORDER BY last_name, first_name`,[`%${searchTerm}%`]
     );
-    console.log(results.rows)
+    
     return results.rows.map(c => new Customer(c));
   }
 
