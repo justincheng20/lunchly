@@ -1,7 +1,7 @@
 /** Reservation for Lunchly */
 
 const moment = require("moment");
-
+const ExpressError = require("../expressError")
 const db = require("../db");
 
 
@@ -26,12 +26,12 @@ class Reservation {
 
   static async getReservationsForCustomer(customerId) {
     const results = await db.query(
-          `SELECT id, 
-           customer_id AS "customerId", 
-           num_guests AS "numGuests", 
-           start_at AS "startAt", 
+          `SELECT id,
+           customer_id AS "customerId",
+           num_guests AS "numGuests",
+           start_at AS "startAt",
            notes AS "notes"
-         FROM reservations 
+         FROM reservations
          WHERE customer_id = $1`,
         [customerId]
     );
@@ -48,6 +48,20 @@ class Reservation {
     );
     this.id = result.rows[0].id;
   }
+
+  set numGuests(val) {
+    if (val < 1) {
+      throw new ExpressError ("Reservation must be for at least one person.", 400)
+    } else {
+    this._numGuests = val
+    }
+  }
+
+  get numGuests() {
+    return this._numGuests;
+  }
+
+
 
 }
 

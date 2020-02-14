@@ -11,11 +11,9 @@ const router = new express.Router();
 
 router.get("/", async function (req, res, next) {
   try {
-    
-    let search = req.query.q.split('+').join(' ');
-    
     let customers;
-    if (search) {
+    if (req.query.q) {
+      let search = req.query.q.split('+').join(' ');
       customers = await Customer.search(search);
     }
     else {
@@ -33,6 +31,18 @@ router.get("/add/", async function (req, res, next) {
   try {
     return res.render("customer_new_form.html");
   } catch (err) {
+    return next(err);
+  }
+});
+
+/**Show list of best customers */
+
+router.get("/best-customers", async function(req, res, next) {
+  try {
+    let bestCustomers = await Customer.getBestCustomers();
+    return res.render("best_customer_list.html", { bestCustomers })
+  }
+  catch (err) {
     return next(err);
   }
 });

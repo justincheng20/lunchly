@@ -18,10 +18,10 @@ class Customer {
 
   static async all() {
     const results = await db.query(
-      `SELECT id, 
-         first_name AS "firstName",  
-         last_name AS "lastName", 
-         phone, 
+      `SELECT id,
+         first_name AS "firstName",
+         last_name AS "lastName",
+         phone,
          notes
        FROM customers
        ORDER BY last_name, first_name`
@@ -30,15 +30,14 @@ class Customer {
   }
 
   static async search(searchTerm) {
-
     const results = await db.query(
-      `SELECT id, 
-         first_name AS "firstName",  
-         last_name AS "lastName", 
-         phone, 
+      `SELECT id,
+         first_name AS "firstName",
+         last_name AS "lastName",
+         phone,
          notes
        FROM customers
-       WHERE concat (first_name, ' ' ,last_name) LIKE $1
+       WHERE concat (first_name, ' ' ,last_name) ILIKE $1
        ORDER BY last_name, first_name`,[`%${searchTerm}%`]
     );
     console.log(results.rows)
@@ -49,11 +48,11 @@ class Customer {
 
   static async get(id) {
     const results = await db.query(
-      `SELECT id, 
-         first_name AS "firstName",  
-         last_name AS "lastName", 
-         phone, 
-         notes 
+      `SELECT id,
+         first_name AS "firstName",
+         last_name AS "lastName",
+         phone,
+         notes
         FROM customers WHERE id = $1`,
       [id]
     );
@@ -69,9 +68,34 @@ class Customer {
     return new Customer(customer);
   }
 
-  fullName() {
-    return `${this.firstName} ${this.lastName}` 
-  } 
+  get fullName() {
+    return `${this.firstName} ${this.lastName}`
+  }
+
+  /**get list of 10 best customers */
+
+  static async getBestCustomers() {
+    const results = await db.query(
+      `SELECT customers.id,
+      first_name AS "firstName",
+      last_name AS "lastName",
+      phone,
+      customers.notes, COUNT (reservations.customer_id) as reservations
+      FROM customers
+      JOIN reservations
+      ON customers.id = reservations.customer_id
+      GROUP BY customers.id
+      ORDER BY Reservations DESC
+      LIMIT 10
+      `
+    );
+    const bestCustomers = results.rows.map(c => {
+      let nc = new Customer(c)
+      nc.reservations = c.reservations;
+      return nc;
+    });
+    return bestCustomers;
+  }
 
   /** get all reservations for this customer. */
 
@@ -98,6 +122,16 @@ class Customer {
       );
     }
   }
+
+  set notes(val) {
+    this._notes = val || "";
+  }
+
+  get notes() {
+    return this._notes;
+  }
+
+
 }
 
 module.exports = Customer;
